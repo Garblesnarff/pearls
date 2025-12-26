@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
-import { getBearerToken } from '../lib/jwt.js';
+import { getBearerToken, verifyToken, type AuthTokenPayload } from '../lib/jwt.js';
 import { verifyWorkOSToken, resolveUserRoles } from '../services/workos.js';
 import { pool } from '../db/client.js';
 
@@ -76,6 +76,23 @@ export async function extractAuthContext(req: Request): Promise<AuthContext> {
       return apiKeyAuth;
     }
     return { userId: null, email: null, roles: ['anonymous'], isAnonymous: true };
+  }
+
+  // Try our own JWT tokens first (issued by our OAuth flow)
+  try {
+    const payload = verifyToken(token) as AuthTokenPayload;
+    if (payload && payload.userId) {
+      // Re-resolve roles in case they've been updated
+      const roles = resolveUserRoles(payload.userId);
+      return {
+        userId: payload.userId,
+        email: payload.email || null,
+        roles,
+        isAnonymous: false,
+      };
+    }
+  } catch {
+    // Not one of our tokens, try WorkOS
   }
 
   // Try WorkOS token
