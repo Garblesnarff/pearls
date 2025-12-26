@@ -11,6 +11,7 @@ const app = express();
 
 // Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // For OAuth token requests
 
 // Serve static files from public directory
 app.use(express.static(path.join(import.meta.dir, '../public')));
