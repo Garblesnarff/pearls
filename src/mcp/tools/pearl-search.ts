@@ -42,13 +42,22 @@ export async function handlePearlSearch(args: unknown, auth: AuthContext) {
 
   return {
     count: results.length,
-    pearls: results.map(p => ({
-      id: p.id,
-      title: p.title,
-      snippet: p.snippet,
-      rank: p.rank,
-      createdAt: p.createdAt.toISOString(),
-      createdBy: p.createdBy,
-    })),
+    pearls: results.map(p => {
+      // Raw SQL returns snake_case column names
+      const raw = p as Record<string, unknown>;
+      const createdAt = raw.created_at || p.createdAt;
+      const createdBy = raw.created_by || p.createdBy;
+
+      return {
+        id: p.id,
+        title: p.title,
+        snippet: p.snippet,
+        rank: p.rank,
+        createdAt: createdAt instanceof Date
+          ? createdAt.toISOString()
+          : String(createdAt),
+        createdBy: String(createdBy),
+      };
+    }),
   };
 }
