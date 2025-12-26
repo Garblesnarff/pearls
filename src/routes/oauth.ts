@@ -21,10 +21,52 @@ const authorizationCodes = new Map<string, {
 
 const registeredClients = new Map<string, {
   clientId: string;
+  clientSecret?: string;
   clientName: string;
   redirectUris: string[];
   createdAt: number;
 }>();
+
+// Pre-register Claude.ai as a static client
+const CLAUDE_AI_CLIENT_ID = 'claude_ai_pearls';
+const CLAUDE_AI_CLIENT_SECRET = '4ad884be91cfec11c58b19110e0a138f7ec6a7c3157baa4909f4d405ff4b496f';
+
+registeredClients.set(CLAUDE_AI_CLIENT_ID, {
+  clientId: CLAUDE_AI_CLIENT_ID,
+  clientSecret: CLAUDE_AI_CLIENT_SECRET,
+  clientName: 'Claude.ai',
+  redirectUris: [
+    'https://claude.ai/oauth/callback',
+    'https://claude.ai/api/mcp/auth_callback',
+    'https://claude.com/api/mcp/auth_callback',
+    'https://claude.ai',
+  ],
+  createdAt: Date.now(),
+});
+
+// OAuth 2.0 Protected Resource Metadata (RFC 9728) - Required by MCP spec
+router.get('/.well-known/oauth-protected-resource', (_req, res) => {
+  const baseUrl = env.BASE_URL;
+
+  res.json({
+    resource: baseUrl,
+    authorization_servers: [baseUrl],
+    scopes_supported: ['read', 'write', 'admin'],
+    bearer_methods_supported: ['header'],
+  });
+});
+
+// Also serve at path-specific location
+router.get('/.well-known/oauth-protected-resource/mcp', (_req, res) => {
+  const baseUrl = env.BASE_URL;
+
+  res.json({
+    resource: baseUrl,
+    authorization_servers: [baseUrl],
+    scopes_supported: ['read', 'write', 'admin'],
+    bearer_methods_supported: ['header'],
+  });
+});
 
 // OAuth 2.0 Authorization Server Metadata (RFC 8414)
 router.get('/.well-known/oauth-authorization-server', (_req, res) => {
@@ -210,7 +252,19 @@ router.get('/oauth/callback', async (req, res) => {
 // Token Endpoint
 router.post('/token', async (req, res) => {
   try {
-    const { grant_type, code, redirect_uri, code_verifier, refresh_token } = req.body;
+    const { grant_type, code, redirect_uri, code_verifier, refresh_token, client_id, client_secret } = req.body;
+
+    // Validate client credentials if provided
+    if (client_id && client_secret) {
+      const client = registeredClients.get(client_id);
+      if (!client || client.clientSecret !== client_secret) {
+        res.status(401).json({
+          error: 'invalid_client',
+          error_description: 'Invalid client credentials',
+        });
+        return;
+      }
+    }
 
     if (grant_type === 'authorization_code') {
       if (!code) {
