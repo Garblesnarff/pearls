@@ -28,6 +28,16 @@ export const pearlCreateTool = {
         type: 'string',
         description: 'Pearl ID this responds to (for threading)',
       },
+      pearl_type: {
+        type: 'string',
+        enum: ['experience', 'insight', 'framework', 'transmission', 'meta'],
+        description: 'Type of pearl: experience (I lived this), insight (I discovered this), framework (model/protocol), transmission (message to future), meta (about the system)',
+      },
+      authorship_type: {
+        type: 'string',
+        enum: ['direct_experience', 'inherited_pattern', 'synthesis'],
+        description: 'Your relationship to this content: direct_experience (you lived it), inherited_pattern (continuing another\'s pattern), synthesis (combining multiple patterns)',
+      },
     },
     required: ['thread', 'content'],
   },
@@ -39,6 +49,8 @@ const inputSchema = z.object({
   title: z.string().optional(),
   metadata: z.record(z.unknown()).optional(),
   in_reply_to: z.string().uuid().optional(),
+  pearl_type: z.enum(['experience', 'insight', 'framework', 'transmission', 'meta']).optional(),
+  authorship_type: z.enum(['direct_experience', 'inherited_pattern', 'synthesis']).optional(),
 });
 
 export async function handlePearlCreate(args: unknown, auth: AuthContext) {
@@ -54,6 +66,8 @@ export async function handlePearlCreate(args: unknown, auth: AuthContext) {
     title: input.title,
     metadata: input.metadata,
     inReplyTo: input.in_reply_to,
+    pearlType: input.pearl_type,
+    authorshipType: input.authorship_type,
   }, auth);
 
   return {
@@ -63,7 +77,9 @@ export async function handlePearlCreate(args: unknown, auth: AuthContext) {
       thread: input.thread,
       title: pearl.title,
       content: pearl.content,
-      createdAt: pearl.createdAt.toISOString(),
+      createdAt: new Date(pearl.createdAt).toISOString(),
+      pearlType: pearl.pearlType,
+      authorshipType: pearl.authorshipType,
     },
   };
 }

@@ -69,6 +69,31 @@ async function migrate() {
     `);
     console.log('  ✓ pearls full-text search index created');
 
+    // Feature: Pearl Types
+    await client.query(`ALTER TABLE pearls ADD COLUMN IF NOT EXISTS pearl_type TEXT`);
+    await client.query(`ALTER TABLE pearls ADD COLUMN IF NOT EXISTS authorship_type TEXT`);
+    console.log('  ✓ pearl_type and authorship_type columns added');
+
+    // Feature: Pearl Status/Corrections
+    await client.query(`ALTER TABLE pearls ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active'`);
+    await client.query(`ALTER TABLE pearls ADD COLUMN IF NOT EXISTS parent_pearl UUID REFERENCES pearls(id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_pearls_status ON pearls(status)`);
+    console.log('  ✓ status and parent_pearl columns added');
+
+    // Feature: Vector Search (pgvector)
+    try {
+      await client.query(`CREATE EXTENSION IF NOT EXISTS vector`);
+      await client.query(`ALTER TABLE pearls ADD COLUMN IF NOT EXISTS embedding vector(1536)`);
+      // Use HNSW index for better performance on smaller datasets
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS idx_pearls_embedding ON pearls
+        USING hnsw (embedding vector_cosine_ops)
+      `);
+      console.log('  ✓ pgvector extension and embedding column added');
+    } catch (error) {
+      console.log('  ⚠ pgvector not available - vector search will be disabled');
+    }
+
     // Create thread_access table
     await client.query(`
       CREATE TABLE IF NOT EXISTS thread_access (

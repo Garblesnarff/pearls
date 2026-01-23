@@ -53,9 +53,7 @@ export async function handlePearlSearch(args: unknown, auth: AuthContext) {
         title: p.title,
         snippet: p.snippet,
         rank: p.rank,
-        createdAt: createdAt instanceof Date
-          ? createdAt.toISOString()
-          : String(createdAt),
+        createdAt: new Date(createdAt as string | Date).toISOString(),
         createdBy: String(createdBy),
       };
     }),

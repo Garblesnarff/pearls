@@ -121,3 +121,27 @@ export async function grantThreadAccess(
     .values({ threadId, role, permission })
     .onConflictDoNothing();
 }
+
+/**
+ * Get IDs of all threads accessible to the user.
+ * Used for stats and other aggregate queries.
+ */
+export async function getAccessibleThreadIds(auth: AuthContext): Promise<string[]> {
+  // Admin has access to all threads
+  if (auth.roles.includes('admin')) {
+    const allThreads = await db.select({ id: threads.id }).from(threads);
+    return allThreads.map(t => t.id);
+  }
+
+  // Get threads where user has access OR thread is public
+  const accessibleThreads = await db
+    .select({ id: threads.id })
+    .from(threads)
+    .leftJoin(threadAccess, eq(threads.id, threadAccess.threadId))
+    .where(or(
+      eq(threads.isPublic, true),
+      inArray(threadAccess.role, auth.roles)
+    ));
+
+  return [...new Set(accessibleThreads.map(t => t.id))];
+}

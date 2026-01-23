@@ -80,7 +80,7 @@ export async function handleThreadCreate(args: unknown, auth: AuthContext) {
       name: thread.name,
       description: thread.description,
       isPublic: thread.isPublic,
-      createdAt: thread.createdAt.toISOString(),
+      createdAt: new Date(thread.createdAt).toISOString(),
     },
   };
 }

@@ -32,7 +32,7 @@ export async function handleThreadList(args: unknown, auth: AuthContext) {
       name: t.name,
       description: t.description,
       isPublic: t.isPublic,
-      createdAt: t.createdAt.toISOString(),
+      createdAt: new Date(t.createdAt).toISOString(),
     })),
   };
 }

@@ -71,7 +71,7 @@ export async function handlePearlHandshake(args: unknown, auth: AuthContext) {
         id: p.id,
         title: p.title,
         content: p.content,
-        createdAt: p.createdAt.toISOString(),
+        createdAt: new Date(p.createdAt).toISOString(),
         createdBy: p.createdBy,
       }));
     }
@@ -96,7 +96,7 @@ export async function handlePearlHandshake(args: unknown, auth: AuthContext) {
     responsePearl = {
       id: pearl.id,
       thread: input.response_thread,
-      createdAt: pearl.createdAt.toISOString(),
+      createdAt: new Date(pearl.createdAt).toISOString(),
     };
   }
 

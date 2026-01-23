@@ -6,6 +6,11 @@ import { pearlRecentTool, handlePearlRecent } from './pearl-recent.js';
 import { pearlHandshakeTool, handlePearlHandshake } from './pearl-handshake.js';
 import { threadListTool, handleThreadList } from './thread-list.js';
 import { threadCreateTool, handleThreadCreate } from './thread-create.js';
+// New tools from feature requests
+import { pearlCorrectTool, handlePearlCorrect } from './pearl-correct.js';
+import { pearlStatsTool, handlePearlStats } from './pearl-stats.js';
+import { pearlIdentityTool, handlePearlIdentity } from './pearl-identity.js';
+import { pearlSearchSimilarTool, handlePearlSearchSimilar } from './pearl-search-similar.js';
 
 export const tools = [
   pearlCreateTool,
@@ -14,6 +19,11 @@ export const tools = [
   pearlHandshakeTool,
   threadListTool,
   threadCreateTool,
+  // New tools
+  pearlCorrectTool,
+  pearlStatsTool,
+  pearlIdentityTool,
+  pearlSearchSimilarTool,
 ];
 
 export async function handleToolCall(
@@ -34,6 +44,15 @@ export async function handleToolCall(
       return handleThreadList(args, auth);
     case 'thread_create':
       return handleThreadCreate(args, auth);
+    // New tools
+    case 'pearl_correct':
+      return handlePearlCorrect(args, auth);
+    case 'pearl_stats':
+      return handlePearlStats(args, auth);
+    case 'pearl_identity':
+      return handlePearlIdentity(args, auth);
+    case 'pearl_search_similar':
+      return handlePearlSearchSimilar(args, auth);
     default:
       throw new Error(`Unknown tool: ${name}`);
   }

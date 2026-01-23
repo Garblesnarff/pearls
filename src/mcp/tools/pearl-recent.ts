@@ -46,7 +46,7 @@ export async function handlePearlRecent(args: unknown, auth: AuthContext) {
       title: p.title,
       content: p.content,
       metadata: p.metadata,
-      createdAt: p.createdAt.toISOString(),
+      createdAt: new Date(p.createdAt).toISOString(),
       createdBy: p.createdBy,
       instanceId: p.instanceId,
     })),
